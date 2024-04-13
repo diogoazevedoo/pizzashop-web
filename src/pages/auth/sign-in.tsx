@@ -1,9 +1,11 @@
+import { useMutation } from '@tanstack/react-query'
 import { Helmet } from 'react-helmet-async'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
+import { signIn } from '@/api/sign-in'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,17 +23,23 @@ export function SignIn() {
     formState: { isSubmitting },
   } = useForm<SignInForm>()
 
+  const { mutateAsync: authenticate } = useMutation({
+    mutationFn: signIn,
+  })
+
   async function handleSignIn(data: SignInForm) {
-    console.log(data)
+    try {
+      await authenticate({ email: data.email })
 
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    toast.success('Auth link sent to your e-mail.', {
-      action: {
-        label: 'Resend',
-        onClick: () => handleSignIn(data),
-      },
-    })
+      toast.success('Auth link sent to your e-mail.', {
+        action: {
+          label: 'Resend',
+          onClick: () => handleSignIn(data),
+        },
+      })
+    } catch {
+      toast.error('Invalid credentials.')
+    }
   }
 
   return (
